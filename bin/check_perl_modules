@@ -1,5 +1,7 @@
-#!/usr/bin/env perl -w
+#!/usr/bin/perl -w
 
+use strict;
+use warnings;
 use ExtUtils::Installed;
 use Module::CoreList;
 use version;
