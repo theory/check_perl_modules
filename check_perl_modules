@@ -1,0 +1,183 @@
+#!/usr/bin/env perl -w
+
+use ExtUtils::Installed;
+use Module::CoreList;
+use version;
+use HTTP::Tiny;
+use Parse::CPAN::Meta;
+use Getopt::Long;
+our $VERSION = '0.10';
+
+Getopt::Long::Configure (qw(bundling));
+
+my %config = (verbose => 0);
+Getopt::Long::GetOptions(
+    'verbose|v+'                   => \$config{verbose},
+    'help|H'                       => \$config{help},
+    'man|M'                        => \$config{man},
+    'version|V'                    => \$config{version},
+) or pod2usage();
+
+# Handle documentation requests.
+pod2usage(
+    ( $config{man} ? ( '-sections' => '.+' ) : ()),
+    '-exitval' => 0,
+) if $config{help} or $config{man};
+
+# Handle version request.
+if ($config{version}) {
+    require File::Basename;
+    print File::Basename::basename($0), " $VERSION\n";
+    exit;
+}
+
+my $installed = ExtUtils::Installed->new;
+
+my $exitval = 0;
+print "Searching installed modules...\n" if $config{verbose} > 1;
+for my $module ($installed->modules) {
+    print "... $module\n" if $config{verbose} > 1;
+    my $meta = fetch_meta($module);
+    unless ($meta->{distfile}) {
+        print "- Unable to find $module on cpanmetadb."
+            if $config{verbose}
+            && !Module::CoreList->first_release($module)
+            && !Module::CoreList->is_deprecated($module, $^V);
+        next;
+    }
+
+    my $curr_version = version->parse($installed->version($module) || 0);
+    my $next_version = version->parse($meta->{version} || 0);
+
+    if ($curr_version < $next_version) {
+        unless ($exitval) {
+            print "WARNING: One or more Perl modueles are out of date\n";
+            $exitval = 1;
+            exit $exitval unless $config{verbose};
+        }
+        print "* $module $curr_version installed but latest is $next_version\n"
+            if $config{verbose};
+    }
+}
+
+print "OK: All Perl modules up-to-date\n" unless $exitval;
+
+exit $exitval;
+
+sub fetch_meta {
+    my $module = shift;
+    my $req = HTTP::Tiny->new;
+    my $uri = "http://cpanmetadb.appspot.com/v1.0/package/$module";
+    print "... ... Fetching $uri\n" if $config{verbose} > 2;
+    my $res = $req->get($uri);
+    return eval { (Parse::CPAN::Meta::Load($res->{content}))[0] } || {};
+}
+
+sub pod2usage {
+    require Pod::Usage;
+    Pod::Usage::pod2usage(
+        '-verbose'  => 99,
+        '-sections' => '(?i:(Usage|Options))',
+        '-exitval'  => 1,
+        '-input'    => __FILE__,
+        @_
+    );
+}
+
+=head1 Name
+
+check_perl_modules - Nagios plugin verifying that the latest versions of all Perl modules are installed
+
+=head1 Usage
+
+  check_perl_modules --verbose
+
+=head1 Description
+
+This program loads a list of all installed Perl modules (as reported by
+ExtUtils::Installed) and emits a Nagios-compliant warning (and the
+accompanying exit code) if they are not all either the latest version (as
+reported by the L<CPAN Meta DB|http://cpanmetadb.appspot.com/>) or a core
+module.
+
+=head1 Options
+
+  -v, --verbose   Incremental verbose mode.
+  -H, --help      Print a usage statement and exit.
+  -M, --man       Print the complete documentation and exit.
+  -V, --version   Print the version number and exit.
+
+=head1 Options Details
+
+=over
+
+=item C<--verbose>
+
+  check_perl_modules --verbose
+  check_perl_modules -vv
+
+Output status messages as the program runs. If not specified, the program will
+exit the first time a module is found to be out of date. If specified once,
+each out-of-date module will be listed. If specified twice, the name of each
+module will be printed as it is checked. If specified three times, the URL
+used to query the CPAN Meta DB will be printed. C<-vvv> is the most verbose
+possible output, mainly useful for debugging.
+
+=item C<-H>
+
+=item C<--help>
+
+  check_perl_modules --help
+  check_perl_modules -H
+
+Outputs a brief description of the options supported by C<check_perl_modules>
+and exits.
+
+=item C<-M>
+
+=item C<--man>
+
+  check_perl_modules --man
+  check_perl_modules -M
+
+Outputs this documentation and exits.
+
+=item C<-V>
+
+=item C<--version>
+
+  check_perl_modules --version
+  check_perl_modules -V
+
+Outputs the program name and version and exits.
+
+=back
+
+=head1 Author
+
+David E. Wheeler <david.wheeler@pgexperts.com>
+
+=head1 Copyright and License
+
+Copyright (c) 2011 David E. Wheeler.
+
+This module is free software; you can redistribute it and/or modify it under
+the L<PostgreSQL License|http://www.opensource.org/licenses/postgresql>.
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose, without fee, and without a written agreement is
+hereby granted, provided that the above copyright notice and this paragraph
+and the following two paragraphs appear in all copies.
+
+In no event shall David E. Wheeler be liable to any party for direct,
+indirect, special, incidental, or consequential damages, including lost
+profits, arising out of the use of this software and its documentation, even
+if David E. Wheeler has been advised of the possibility of such damage.
+
+David E. Wheeler specifically disclaims any warranties, including, but not
+limited to, the implied warranties of merchantability and fitness for a
+particular purpose. The software provided hereunder is on an "as is" basis,
+and David E. Wheeler has no obligations to provide maintenance, support,
+updates, enhancements, or modifications.
+
+=cut
