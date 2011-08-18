@@ -1,0 +1,9 @@
+/_build
+/blib
+/check_perl_modules-*
+/MANIFEST
+/MANIFEST.bak
+/*META.*
+/Build
+/Makefile*
+/pm_to_blib

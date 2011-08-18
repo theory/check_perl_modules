@@ -1,0 +1,216 @@
+Revision history for activitymail.
+
+1.26  2009-04-09T22:29:48
+      - Fixed "Illegal character in prototype for main::uri_escape" error.
+        Reported by Bryce Nesbitt.
+      - Moved repository to [GitHub](http://github.com/theory/activitymail).
+      - Fixed a bug handling `cvs add newdir` on CVS 1.12. Per the
+        [bug report](https://rt.cpan.org/Ticket/Display.html?id=49403) from
+        Shriram Natarajan.
+
+1.25  2008-05-05T19:59:28
+       - The URL specified by the -w option is no longer URL-encoded. Only the
+         associated parameters in the GET string are. Reported by Kris Jurka.
+       - Added tye "configure_requires" parameter to Build.PL.
+       - Updated copyright.
+       - Added link to Subversion repository.
+       - Updated POD test to take better advantage of Test::Pod 1.20 or later.
+       - Silenced the output of t/activitymail.t and updated it to use
+         File::Spec instead of a hard-coded Unix-style path.
+
+1.24   2006-04-04T00:30:23
+       - Removed ".diff" from diff URLs, since it doesn't seem to be required
+         by CVSWeb and broke ViewVC. Reported by George Pavlov.
+       - Added calls to uri_escape() to properly escape URLs. Reported by
+         George Pavlov.
+       - Added single quotes around "%{sVv}" in all the examples of the
+         comamnd-line, as it seems that some shells have a hard time
+         recognizing "%{sVv}" as an argument rather than something else.
+         reported by Dave Thorn.
+       - Added -C option to specify a character set for use in Content-Type
+         headers. Suggested by Antoine Pitrou.
+
+1.23   2005-12-09T19:41:23
+       - Various spelling corrections from Gavin Shelley.
+       - Added note about incompatibility of diff on SunOS 5.9. Reported by
+         Gavin Shelley.
+       - Fixed CVS 1.12 command-line parsing to support the "NONE" string for
+         added or deleted version numbers. Based on a patch from Remi Richard.
+
+1.22   2005-10-04T16:57:08
+       - Fixed typo spotted by Matthew Doar.
+       - Fixed HTML mode so that HTML is escaped when it is inserted into the
+         email (as opposed to when it is attached). reported by James B.
+       - Added -P to support the new CVS 1.12 %p argument. Based on a patch
+         from Remi Ricard.
+       - Added the -U argument to replace spaces with underscores in file
+         names before handing them off to 'diff'. Such was always done in
+         earlier versions, but newer versions of CVS don't need it, so -U has
+         been added for the benefit of users of older versions of CVS.
+
+1.21   2005-02-11T02:13:00
+       - Updated contact and bug reporting information.
+
+1.20   2005-02-11T02:02:40
+       - Fix for missing module name due to the way Eclipse 3.0 defines
+         file locations. Patch from Greg Thompson.
+       - Switched to using a code reference to reap dead children. This
+         prevents error messages such as "application bug: activitymail(6644)
+         has SIGCHLD set to SIG_IGN but calls wait()" from appearing in the
+         system log. Reported by Mike Traum.
+       - Noted SVN::Notify in the "See Also" section. Check this module out if
+         you need activity notification messages in Subversion.
+
+1.19   2004-03-11T17:22:54
+       - Added -q and -Q to suppress status messages. Suggested by Gary Meyer.
+       - Added -E and -I to specify regular expressions to check before
+         sending activity notifications for files. The regular expressions
+         are compared to the names of the files being committed. Multiple
+         regular expressions can be specified in a space-delimited list.
+         Heavily modified patch from Gary Meyer.
+
+1.18   2004-03-03T01:41:16
+       - Slightly safer handling of directory names with spaces.
+       - Changed some error messages to properly report when activitymail
+         fails to open a file for reading rather than writing.
+       - Added To Do section. Patches welcome.
+
+1.17   2004-03-03T00:55:30
+       - Better handling of file names and directory names with spaces in
+         them. This broke when I added support for directory names with spaces
+         in 1.16, since it eliminated support for file names with spaces. This
+         version correctly supports both. Reported by contact@abilsoft.com.
+
+1.16   Tue Oct 28 05:22:23 2003
+       - Now only adding the version arguments to the CVSWeb diff URL if V has
+         been specified. This makes it easier to use activitymail in
+         environments where the CVSWeb server's checkout isn't fully
+         up-to-date, such as at SourceForge. Suggested by Brad Clarke.
+       - Removed --minimal option from default value off the -o option, which
+         is a list of options to be passed through to diff. This is for
+         reasons of performance (see the diff man page for more on this). The
+         default value of -o is now simply "-u".
+       - Added support for directory names with spaces and commas. Reported by
+         Colin Gray.
+       - Removed discussion of forking from the known issues section. It seems
+         to work just fine the way it is.
+
+1.15   Wed Oct  8 18:00:32 2003
+       - Branch tag information is now also included for commit messages sent
+         without diffs. Thanks to Bob Bradley for the fix.
+
+1.14   Wed Sep 10 05:29:14 2003
+       - Added support for file names with spaces. CVS has a bug that prevents
+         it from properly diffing when it is passed arguments to be passed to
+         diff with spaces in them. Since we use the -L option to diff to pass
+         in the complete file name to be put into the diff headers, this can
+         lead to problems. So until CVS fixes this bug, any files with spaces
+         in them will actually have their diff header file names with
+         underscores substituted for spaces. Inspired by a hacked version of
+         activitymail sent in by David Krembs.
+       - Added support for files with commas in them.
+       - Now require Perl 5.005 or later in order to use regular expression
+         objects.
+
+1.13   Tue Sep  9 21:18:43 2003
+       - Full directory name to files within the repository is now correctly
+         included in the diff headers. In 1.12, only the last directory in
+         the full directory path was included.
+       - Made all HTML emails complete HTML messages, complete with DOCTYPE
+         declaration.
+
+1.12   Mon Sep  8 17:57:50 2003
+       - Documented -V option. Thanks to Hernan Otero for the spot.
+       - Fixed file names in diffs against /dev/null so that they're properly
+         displayed in the diff headers.
+       - Removed a few superfluous commas from the diff shell commands.
+       - File names in diff headers are now full paths from the repository
+         root. This change should make it possible to actually apply the diff
+         from the root by simply doing `patch -p0 < activitymail.patch`.
+       - Added -N option to specify the location of the null file. Will be
+         useful on those systems that don't have /dev/null (e.g., Win32).
+
+1.11   Fri Aug 29 16:53:25 2003
+       - Updated information and links to other CVS notification applications.
+       - Simple status messages (new directories, imports) and syncmail mode
+         once again send email message bodies.
+       - Simple status messages and syncmail mode now send HTML email if
+         the -H option has been passed.
+
+1.10   Wed Aug 27 23:25:21 2003
+       - Added empty lines between the text of the commit message and the
+         attached diff. This looks neater in mail clients that display
+         attachments inline.
+       - Added -H option sending HTML email. Thanks to Hernan Otero for
+         the initial implementation.
+       - Added -V option to include revision numbers after each listed file.
+         Thanks to Hernan Otero for the initial implementation.
+       - Cut down on the number of times that data is copied in the script,
+         thus reducing processing time and memory requirements, especially
+         on big commits.
+       - Added -w option for a link to a CVSWeb view of the diff for each
+         changed file. Actually looks best when used with HTML. Thanks to
+         Hernan Otero for the initial implementation.
+       - Added check for binary files so that they won't be diffed.
+       - Added -B option to specify a list of binary file name extensions
+         to indicate files that should not be diffed.
+       - New files and deleted files are now diffed against /dev/null in
+         order to provide a more realistic diff.
+       - Added -j option to point to a diff executable to compare added and
+         deleted files. Defaults to "diff", assuming that it's in the path.
+       - Added -M option to prevent messages over a maximum size from being
+         emailed. Thanks to Sam Tregar.
+       - Added -S option to add directory context information to the subject.
+         Thanks to Kent Lindquist.
+       - Branch tags are now listed in the email under their own header.
+         Suggested by David Krembs.
+       - Added -v option to print the version number.
+       - Added POD tests.
+       - Switched to Module::Build for installation.
+
+1.04   2002-11-10 22:58:36
+       - Turned off output buffering, which will hopefully allow status
+         messages to be printed as they happen.
+       - Added "X-Mailer" header to mail messages, so that people who see
+         activitymail messages in archives and such and want to know how
+         they were created will be able to find activitymail.
+
+1.03   2002-08-05 18:34:51
+       - Added -e option so that the cvs executable can be specified.
+       - Added -u option to specify the From header of email messages.
+       - Added -g option to use $USER environment variable for grouping
+         commit transactions. Useful for connecting via :pserver:, where
+         grouping via pgrp won't work. Thanks to Derek Scherger for suggesting
+         these last three changes.
+       - Added "Bugs" section to documentation with a link to the CPAN Request
+         Tracker
+       - Changed example domains in documentation to "example.com".
+
+1.02   2002-06-30 19:16:03
+       - Fixed problem with global filehandles getting closed in the wrong
+         places, thanks to Scott Lanning.
+       - Created distribution package so that activitymail can be properly
+         installed on a system.
+
+1.01   2002-05-22 20:58:41
+       - Added -o option so that diff options can be passed through to diff.
+       - Untabified and rewraped source code.
+       - Updated documentation and corrected typos.
+
+1.00   2002-04-08 23:47:51
+       - Fixed issues with precidence opening files and such, with thanks to
+         Sam Tregar.
+      
+0.99   2002-01-22 00:07:12
+       - Changed transfer encoding from quoted-printable to 8bit, with thanks
+         to Sam Tregar.
+      
+0.987  2002-01-20 16:05:54
+       - Added MIME-Version header, with thanks to Sam Tregar.
+       - Documented issues with forking.
+
+0.986  2002-01-11 19:09:58
+       - Renamed tmp_file_basename() to tmp_base_name().
+       - Updated comments and ranamed tmp_file_only().
+       - Removed debugging. No more glob()!
+       - Initial release to the CPAN.

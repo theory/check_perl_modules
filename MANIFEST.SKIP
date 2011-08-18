@@ -1,0 +1,12 @@
+^_build
+^Build$
+^blib
+~$
+\.bak$
+^MANIFEST\.SKIP$
+^check_perl_modules
+\.git
+output\.txt
+pod-spelling.t$
+^MYMETA.yml$
+^MYMETA\.json$
