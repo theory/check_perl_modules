@@ -53,7 +53,7 @@ for my $module ($installed->modules) {
 
     if ($curr_version < $next_version) {
         unless ($exitval) {
-            print "WARNING: One or more Perl modueles are out of date\n";
+            print "WARNING: One or more Perl modules are out of date\n";
             $exitval = 1;
             exit $exitval unless $config{verbose};
         }
