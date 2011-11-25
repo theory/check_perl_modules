@@ -41,7 +41,7 @@ for my $module ($installed->modules) {
     print "... $module\n" if $config{verbose} > 1;
     my $meta = fetch_meta($module);
     unless ($meta->{distfile}) {
-        print "- Unable to find $module on cpanmetadb."
+        print "- Unable to find $module on cpanmetadb.\n"
             if $config{verbose}
             && !Module::CoreList->first_release($module)
             && !Module::CoreList->is_deprecated($module, $^V);
