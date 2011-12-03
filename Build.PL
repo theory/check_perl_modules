@@ -9,12 +9,8 @@ my $build = Module::Build->new(
     pm_files           => {},
     configure_requires => { 'Module::Build' => '0.2701' },
     requires           => {
+        'App::cpanoutdated' => 0,
         'Getopt::Long'      => 0,
-        'File::Basename'    => 0,
-        'Module::CoreList'  => 0,
-        'version'           => 0,
-        'HTTP::Tiny'        => 0,
-        'Parse::CPAN::Meta' => 0,
         'Pod::Usage'        => 0,
     },
     build_requires     => {

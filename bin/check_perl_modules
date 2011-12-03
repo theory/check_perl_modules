@@ -2,22 +2,21 @@
 
 use strict;
 use warnings;
-use ExtUtils::Installed;
-use Module::CoreList;
-use version;
-use HTTP::Tiny;
-use Parse::CPAN::Meta;
 use Getopt::Long;
-our $VERSION = '0.10';
+our $VERSION = '0.20';
 
 Getopt::Long::Configure (qw(bundling));
 
-my %config = (verbose => 0);
+my %config = (
+    cpan_outdated => 'cpan-outdated',
+    verbose       => 0,
+);
 Getopt::Long::GetOptions(
-    'verbose|v+'                   => \$config{verbose},
-    'help|H'                       => \$config{help},
-    'man|M'                        => \$config{man},
-    'version|V'                    => \$config{version},
+    'cpan-outdated|c=s' => \$config{cpan_outdated},
+    'verbose|v+'        => \$config{verbose},
+    'help|H'            => \$config{help},
+    'man|M'             => \$config{man},
+    'version|V'         => \$config{version},
 ) or pod2usage();
 
 # Handle documentation requests.
@@ -33,46 +32,36 @@ if ($config{version}) {
     exit;
 }
 
-my $installed = ExtUtils::Installed->new;
-
 my $exitval = 0;
 print "Searching installed modules...\n" if $config{verbose} > 1;
-for my $module ($installed->modules) {
-    print "... $module\n" if $config{verbose} > 1;
-    my $meta = fetch_meta($module);
-    unless ($meta->{distfile}) {
-        print "- Unable to find $module on cpanmetadb.\n"
-            if $config{verbose}
-            && !Module::CoreList->first_release($module)
-            && !Module::CoreList->is_deprecated($module, $^V);
-        next;
+my $fh = _pipe($config{cpan_outdated});
+while (<$fh>) {
+    unless ($exitval) {
+        print "WARNING: One or more Perl modules are out of date\n";
+        $exitval = 1;
     }
-
-    my $curr_version = version->parse($installed->version($module) || 0);
-    my $next_version = version->parse($meta->{version} || 0);
-
-    if ($curr_version < $next_version) {
-        unless ($exitval) {
-            print "WARNING: One or more Perl modules are out of date\n";
-            $exitval = 1;
-            exit $exitval unless $config{verbose};
-        }
-        print "* $module $curr_version installed but latest is $next_version\n"
-            if $config{verbose};
-    }
+    print if $config{verbose};
 }
 
 print "OK: All Perl modules up-to-date\n" unless $exitval;
 
 exit $exitval;
 
-sub fetch_meta {
-    my $module = shift;
-    my $req = HTTP::Tiny->new;
-    my $uri = "http://cpanmetadb.appspot.com/v1.0/package/$module";
-    print "... ... Fetching $uri\n" if $config{verbose} > 2;
-    my $res = $req->get($uri);
-    return eval { (Parse::CPAN::Meta::Load($res->{content}))[0] } || {};
+sub _pipe {
+    # Safer version of backtick (see perlipc(1)).
+    if ($^O eq 'MSWin32') {
+        my $cmd = q{"}  . join(q{" "}, @_) . q{"|};
+        open my $pipe, $cmd or die "Cannot fork: $!\n";
+        return $pipe;
+    }
+
+    my $pid = open my $pipe, '-|';
+    die "Cannot fork: $!\n" unless defined $pid;
+    return $pipe if $pid;
+
+    # Child process. Execute the commands.
+    exec @_ or die "Cannot exec $_[0]: $!\n";
+    # Not reached.
 }
 
 sub pod2usage {
@@ -96,34 +85,40 @@ check_perl_modules - Nagios plugin verifying that the latest versions of all Per
 
 =head1 Description
 
-This program loads a list of all installed Perl modules (as reported by
-ExtUtils::Installed) and emits a Nagios-compliant warning (and the
-accompanying exit code) if they are not all either the latest version (as
-reported by the L<CPAN Meta DB|http://cpanmetadb.appspot.com/>) or a core
-module.
+This program emits a Nagios-compliant warning (and the accompanying exit code)
+if any installed Perl modules are not the latest version (as reported by L<cpan-outdated>.
 
 =head1 Options
 
-  -v, --verbose   Incremental verbose mode.
-  -H, --help      Print a usage statement and exit.
-  -M, --man       Print the complete documentation and exit.
-  -V, --version   Print the version number and exit.
+  -c  --cpan-outdated  Path to cpan-outdated.
+  -v, --verbose        Incremental verbose mode.
+  -H, --help           Print a usage statement and exit.
+  -M, --man            Print the complete documentation and exit.
+  -V, --version        Print the version number and exit.
 
 =head1 Options Details
 
 =over
+
+=item C<-c>
+
+=item C<--cpan-outdated>
+
+  check_perl_modules --cpan-oudated /opt/bin/cpan-outdated
+  check_perl_modules -c ~/bin/my-cpan-outdated
+
+The path to the C<L<cpan-oudated>> script. Set to C<cpan-outdated> by default,
+which should work fine if the script is in the path.
+
+=item C<-v>
 
 =item C<--verbose>
 
   check_perl_modules --verbose
   check_perl_modules -vv
 
-Output status messages as the program runs. If not specified, the program will
-exit the first time a module is found to be out of date. If specified once,
-each out-of-date module will be listed. If specified twice, the name of each
-module will be printed as it is checked. If specified three times, the URL
-used to query the CPAN Meta DB will be printed. C<-vvv> is the most verbose
-possible output, mainly useful for debugging.
+Output status messages as the program runs. If specified, each out-of-date
+distribution will be listed.
 
 =item C<-H>
 

@@ -1,11 +1,10 @@
-check_perl_modules version 0.10
+check_perl_modules version 0.20
 ===============================
 
-This program loads a list of all installed Perl modules (as reported by
-ExtUtils::Installed) and emits a Nagios-compliant warning (and the
-accompanying exit code) if they are not all either the latest version (as
-reported by the [CPAN Meta DB](http://cpanmetadb.appspot.com/)) or a core
-module.
+This program emits a Nagios-compliant warning (and the accompanying exit code)
+if any installed Perl CPAN distribitions are not the latest version. It relies
+on [`cpan-outdated`](http://search.cpan.org/perldoc?cpan-outdated) to
+determine the outdated distributions.
 
 Copyright and License
 ---------------------
